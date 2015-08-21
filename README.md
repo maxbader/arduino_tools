@@ -2,8 +2,8 @@
 This repository contains some arduino examples and libraries
 
 ##Libraries
-- Servo Librarie for Arduino Zero / M0 pro using Timer TCC1
-- Servo Librarie for Arduino Leonardo
+- Servo Library for Arduino Zero / M0 pro using Timer TCC1
+- Servo Library for Arduino Leonardo
 
 ##Examples
 ###Arduino Zero / M0 pro
