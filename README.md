@@ -2,6 +2,11 @@
 This repository contains some arduino examples and libraries
 
 ##Libraries
+You can checkout a single folder/library with svn to your local sketchbook folder
+```
+svn checkout https://github.com/maxbader/arduino_tools/trunk/libraries/Servos_zero
+```
+
 - Servo Library for Arduino Zero / M0 pro using Timer TCC1
 - Servo Library for Arduino Leonardo
 
