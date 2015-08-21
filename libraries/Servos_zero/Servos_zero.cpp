@@ -22,7 +22,7 @@ const int32_t Servos::counter_ticks_per_micro_secounds = 3;
 int Servos::pin_output[3];       /// output pin for servo 0, values < 0 means inactive
 int32_t Servos::servo_compare_value[3];
 int32_t Servos::servo_neutral_signal_micro_secounds[3];   /// servo neutral pose
-float Servos::servo_counter_ticks_per_rad[3];
+float Servos::servo_micro_secounds_per_rad[3];
 
 /// Timer
 Tcc* Servos::TC = ( Tcc* ) TCC1;
@@ -31,7 +31,7 @@ Servos::Servos() {
     for ( unsigned int i = 0; i < 3; i++ ) {
         pin_output[i] = -1;
         servo_neutral_signal_micro_secounds[i] = 1500;
-        servo_counter_ticks_per_rad[i] = ( 48000000/1000 ) / ( 16.0 * M_PI );
+        servo_micro_secounds_per_rad[i] = ( 48000000.0/1000.0 ) / ( 16.0 * M_PI ) / (float) counter_ticks_per_micro_secounds;
         servo_compare_value[i] = servo_neutral_signal_micro_secounds[i] * counter_ticks_per_micro_secounds;
     }
 }
@@ -90,10 +90,16 @@ void Servos::setupServosOnTimer1 ( int pin_0, int pin_1, int pin_2 ) {
     while ( TC->SYNCBUSY.bit.ENABLE == 1 ); // wait for sync
 };
 
+void Servos::setMicroSecoundsPerRad ( float micro_secounds, uint8_t servo ) {
+    servo_micro_secounds_per_rad[servo] = micro_secounds;
+}
+float Servos::getMicroSecoundsPerRad ( uint8_t servo ) {
+    return servo_micro_secounds_per_rad[servo];
+}
 void Servos::setNeutral ( int32_t micro_secounds, uint8_t servo ) {
     servo_neutral_signal_micro_secounds[servo] = micro_secounds;
 }
-int32_t Servos::getNeutral ( int32_t micro_secounds, uint8_t servo ) {
+int32_t Servos::getNeutral ( uint8_t servo ) {
     return servo_neutral_signal_micro_secounds[servo];
 }
 void Servos::setHighTime ( int32_t micro_secounds, uint8_t servo ) {
@@ -101,9 +107,9 @@ void Servos::setHighTime ( int32_t micro_secounds, uint8_t servo ) {
     set_compare_register ( servo );
 }
 void Servos::setRad ( float rad, uint8_t servo ) {
-    int32_t offset = servo_counter_ticks_per_rad[servo] * rad;
-    int32_t base = servo_neutral_signal_micro_secounds[servo] * counter_ticks_per_micro_secounds;
-    servo_compare_value[servo] = offset + base;
+    int32_t offset =  (servo_micro_secounds_per_rad[servo] * rad);
+    int32_t base = (servo_neutral_signal_micro_secounds[servo]);
+    servo_compare_value[servo] = (offset + base)  * counter_ticks_per_micro_secounds;
     set_compare_register ( servo );
 }
 void Servos::setDegrees ( float deg, uint8_t servo ) {
@@ -113,9 +119,9 @@ int32_t Servos::getHighTime ( uint8_t servo ) {
     return servo_compare_value[servo] / counter_ticks_per_micro_secounds;
 }
 float Servos::getRad ( uint8_t servo ) {
-    int32_t base = servo_neutral_signal_micro_secounds[servo] * counter_ticks_per_micro_secounds;
-    float offset = servo_compare_value[servo] - base;
-    return offset / servo_counter_ticks_per_rad[servo];
+    int32_t base = servo_neutral_signal_micro_secounds[servo];
+    float offset = (servo_compare_value[servo] / counter_ticks_per_micro_secounds) - base;
+    return offset / servo_micro_secounds_per_rad[servo];
 }
 float Servos::getDegrees ( uint8_t servo ) {
     return getRad ( servo ) * ( 180.0 / M_PI );

@@ -26,19 +26,19 @@ class Servos {
     static unsigned int timer_irq_mc1_count;
     static unsigned int timer_irq_mc2_count;
 
-    static const int32_t counter_ticks_per_micro_secounds;      /// ticks per micro (0.000001) second 
+    static const int32_t counter_ticks_per_micro_secounds;      /// ticks per micro (0.000001) second
     static int pin_output[3];       /// output pin for servo 0, values < 0 means inactive
-    static int32_t servo_compare_value[3];       /// servo neutral pose 
-    static int32_t servo_neutral_signal_micro_secounds[3];   /// servo neutral pose 
-    static float servo_counter_ticks_per_rad[3];
+    static int32_t servo_compare_value[3];       /// servo neutral pose
+    static int32_t servo_neutral_signal_micro_secounds[3];   /// servo neutral pose
+    static float servo_micro_secounds_per_rad[3];
 
 
     /**
      * interrupt handler
      * @param sets all active pins ot high
      **/
-    static void set_compare_register ( uint8_t servo);
-    
+    static void set_compare_register ( uint8_t servo );
+
 public:
     Servos();
     /**
@@ -51,11 +51,22 @@ public:
     static void setupServosOnTimer1 ( int pin_0, int pin_1 = -1, int pin_2 = -1 );
 
     /**
+     * @brief sets the scale for setDeg and setRad
+     * @param micro_secounds time per rad in micro_secounds (us)
+     * @param servo id of the servo to set
+     */
+    void setMicroSecoundsPerRad ( float micro_secounds, uint8_t servo );
+    /**
+     * @brief returns the scale of setDeg and setRad
+     * @param servo id of the servo to set
+     * @return micro_secounds time per rad in micro_secounds (us)
+     */
+    float getMicroSecoundsPerRad ( uint8_t servo );
+    /**
      * @brief enables the timer
      * @param value ture => enable, false => disable
      */
     static void enable ( bool value );
-
     /**
      * sets the neutral pose
      * @param micro_secounds high time in micro_secounds (us)
@@ -64,10 +75,9 @@ public:
     static void setNeutral ( int32_t micro_secounds, uint8_t servo );
     /**
      * sets the neutral pose
-     * @param micro_secounds high time in micro_secounds (us)
      * @param servo id of the servo to set
      **/
-    static int32_t getNeutral ( int32_t micro_secounds, uint8_t servo );
+    static int32_t getNeutral ( uint8_t servo );
     /**
      * sets an angle on the selected servo in degrees
      * @param deg angle 0 means neutral pose
