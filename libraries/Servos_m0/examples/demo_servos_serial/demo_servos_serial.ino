@@ -1,12 +1,13 @@
 /**
  * @author Markus Bader <markus.bader@tuwien.ac.at>
- * @brief Simple servo driver for an arduino zero to controll
+ * @brief Simple servo driver for an arduino m0 to controll
  * three servos with timer 1
+ * @info you have to use the arduino.org framework
  * @file demo_servos_serial.ino
  * @license Simplified BSD License
  */
 
-#include <Servos_zero.h>
+#include <Servos_m0.h>
 
 Servos servos;
 uint8_t pinServo0 = 9;
