@@ -11,6 +11,8 @@ svn checkout https://github.com/maxbader/arduino_tools/trunk/libraries/Servos_ze
 - Servo Library for Arduino Leonardo
 
 ##Examples
+###Arduino Serial Communication
+- serial_using_structs: Arduino serial communication using structs with a python demo
 ###Arduino Zero / M0 pro
 - timer_zero_tc_interrupt: TC Timer with interrupt handler on capture and ovf
 - timer_zero_tc_counter:   TC Timer reading counter value
