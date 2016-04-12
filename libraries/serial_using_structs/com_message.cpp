@@ -1,6 +1,5 @@
 /**
  * @author Markus Bader <markus.bader@tuwien.ac.at>
- * @file bldc.cpp
  * @license Simplified BSD License
  */
 
@@ -8,6 +7,7 @@
 
 using namespace tuw;
 uint16_t ComMessage::count_msg = 0;
+uint16_t ComMessage::sync_count = 0;
 
 ComMessage::ComMessage() {
     reset();
@@ -55,4 +55,23 @@ uint16_t ComMessage::send () {
         }
     }
     return total;
+}
+
+uint16_t ComMessage::send_sync () {
+    size = 0;
+    type = ComHeader::TYPE_SYNC;
+    stamp = Time::offest();
+    return send();
+}
+
+void ComMessage::try_sync(){
+	if(tuw::Time::isSet()) return;
+	int request_count = 0;
+	for(int i = 0; tuw::Time::isSet() == false; i++){
+      if(i%10 == 0) send_sync();
+      if(receive() && (type == tuw::ComHeader::TYPE_TIME)) { 
+        tuw::Time::setClock(stamp, millis());  
+      }   
+      delay ( 10 );
+   }
 }

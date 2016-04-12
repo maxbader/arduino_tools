@@ -17,7 +17,7 @@ extern "C" void TCC1_Handler ( void ) __attribute__ ( ( signal ) );
 
 /**
  * Class to simplify servo commands
- * works on Arduino Zero
+ * works on Arduino M0
  * @author Markus Bader <markus.bader@tuwien.ac.at>
  **/
 class Servos {

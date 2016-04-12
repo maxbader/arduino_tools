@@ -1,3 +1,10 @@
+# Backups
+*swap
+*~
+*.swp
+*.swo
+*.kate-swp
+
 # Compiled Object files
 *.slo
 *.lo
@@ -26,3 +33,29 @@
 *.exe
 *.out
 *.app
+
+# CMake
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+install_manifest.txt
+build
+
+# Eclipse
+.project
+.pydevproject
+.settings
+
+
+# KDevelop
+*kdev*
+
+# ROS
+build
+devel
+.catkin_workspace
+./src/CMakeLists.txt
+
+# Python
+*.pyc
