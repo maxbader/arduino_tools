@@ -6,7 +6,7 @@
  * @license Simplified BSD License
  */
 
-#include <Servos_zero.h>
+#include <Servos_zero/Servos_zero.h>
 
 Servos servos;
 uint8_t pinServo0 = 9;

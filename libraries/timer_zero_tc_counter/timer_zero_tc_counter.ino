@@ -4,6 +4,8 @@
  * @email markus.bader@tuwien.ac.at
  */
  
+#include <Arduino.h>
+
 int pin_ovf_led = 13;  // debug pin for overflow led 
 int pin_mc0_led = 5;  // debug pin for compare led 
 unsigned int loop_count = 0;

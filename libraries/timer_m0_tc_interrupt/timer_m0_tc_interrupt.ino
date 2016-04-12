@@ -1,6 +1,7 @@
 /**
  * @author Markus Bader
- * @brief this program shows how to use the TC timer with interrupts on an Arduino Zero board
+ * @brief this program shows how to use the TC timer with interrupts on an Arduino M0 board
+ * @info you have to use the arduino.org framework
  * @email markus.bader@tuwien.ac.at
  */
  
@@ -19,7 +20,7 @@ void setup() {
 
   
   // Enable clock for TC 
-  REG_GCLK_CLKCTRL = (uint16_t) (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID_TCC2_TC3) ;
+  REG_GCLK_CLKCTRL = (uint16_t) (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID ( GCM_TCC2_TC3 ) ) ;
   while ( GCLK->STATUS.bit.SYNCBUSY == 1 ); // wait for sync 
 
   // The type cast must fit with the selected timer mode 
