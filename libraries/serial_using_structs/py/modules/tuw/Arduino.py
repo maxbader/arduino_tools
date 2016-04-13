@@ -140,17 +140,17 @@ class ComMessage(ComHeader):
             msg = self.com.read(self.size_header())
             if(len(msg) != self.size_header()) :
                 print "incorrect header received"
-                self.com.reset_input_buffer()
+                self.com.flushInput()
                 return self.rx
             self.unpack(msg)
             if(self.size >= self.max_data_size):
                 print "incorrect header received, data size = " + str(self.size)
-                self.com.reset_input_buffer()
+                self.com.flushInput()
                 return self.rx
             self.data = self.com.read(self.size)
             if(len(self.data) != self.size) :
                 print "incorrect data received"
-                self.com.reset_input_buffer()
+                self.com.flushInput()
                 return self.rx
             self.rx = True
         except struct.error as e:
