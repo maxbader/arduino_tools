@@ -39,6 +39,11 @@ class ComHeader:
     ## unique type id to identify received objects
     struct_header = struct.Struct("=HIii")
     
+    ## unique type id to identify received objects
+    TYPE_EMPTY   = 0
+    TYPE_SYNC_REQUEST = 10
+    TYPE_SYNC = 11
+    
     ## constructor
     def __init__(self, size = 0, seq = 0, sec = 0, nsec = 0):
         ## set on true on successful received messages
@@ -63,22 +68,14 @@ class ComHeader:
     def pack(self):
         msg = self.struct_header.pack(len(self.data), self.seq, self.stamp.sec, self.stamp.nsec)
         return msg
-        
-    def set_sync(self):
-        self.size = 0
-        self.stamp.set_to_now();
-      
+              
+    ## overload str fnc
     def __str__(self):
-        return 'seq={:04d}, size={:d}:, stamp={:s}'.format(self.seq, self.size, str(self.stamp) )
+        return 'seq={:04d}, size={:d}, stamp={:s}'.format(self.seq, self.size, str(self.stamp) )
      
 ## header class send messages via serial link
 class ComMessage(ComHeader):
     
-    ## unique type id to identify received objects
-    TYPE_EMPTY   = 0
-    TYPE_NA      = -1
-    TYPE_TIME_REQUEST = 10
-    TYPE_TIME = 11
     struct_type = struct.Struct("=H")
     
     ## constructor
@@ -90,6 +87,7 @@ class ComMessage(ComHeader):
         self.com.timeout = timeout
         self.com.xonxoff = xonxoff
         self.quit = False
+        self.count_msg = 0   
         
         
     ## closes serial link
@@ -103,35 +101,48 @@ class ComMessage(ComHeader):
     def open(self):   
         try:
             self.com.open()
+            self.com.flushInput()
+            self.com.flushOutput()
             return True
         except serial.serialutil.SerialException:
             print "Could not open port: " +  self.com.port
             self.close()
             return False
-        
+    
     ## opens serial link
     def pop_type(self):
-        type = -1
         if  (len(self.data) >= self.struct_type.size):
             type, = self.struct_type.unpack(self.data[0:self.struct_type.size] )
             self.data = self.data[self.struct_type.size:]
+            return type
         elif (len(self.data) == 0):
-            type = 0
-        return type
+            return ComHeader.TYPE_EMPTY
+        else :
+            return ComHeader.TYPE_NA
     
-    def pop_msg(self, size_msg):
-        msg = []
-        if  (len(self.data) >= size_msg):
-            msg = self.data[0:size_msg]
-            self.data = self.data[size_msg:]
-        return msg
+    ## pushes an object for sending into the message buffer
+    def push_object(self, object):
+        self.data = self.data + self.struct_type.pack(object.TYPE) + object.pack()
+        self.size = len(self.data)
         
+    ## pop the first object from a received message
+    def pop_object(self, object):
+        if  (len(self.data) >= object.struct.size):
+            msg = self.data[0:object.struct.size]
+            self.data = self.data[object.struct.size:]
+            object.unpack(msg)
+        return object
+        
+    ## pushes an sync object for sending into the message buffer
     def push_sync(self):
-        self.set_sync()
+        self.stamp.set_to_now()
+        self.data = self.data + self.struct_type.pack(self.TYPE_SYNC)
+        self.size = len(self.data)
     
+    ## clears the message buffer
     def clear(self):
         self.size = 0
-        self.data = [self.data, TYPE_TIME]
+        self.data = ''
         
     ## receives message
     # @see check the rx variable to see if the receiving was successful 
@@ -158,23 +169,23 @@ class ComMessage(ComHeader):
                 return self.rx
             self.rx = True
         except struct.error as e:
-            print "struct.error"        
-            print e        
-            print "serial.SerialTimeoutException = " + e
+            print "struct.error " + e    
         except serial.SerialTimeoutException as e:
-            print "serial.SerialTimeoutException = " + e
+            print "serial.SerialTimeoutException " + e
         except serial.serialutil.SerialException as e:
-            print "serial.serialutil.SerialException = " + e
+            print "serial.serialutil.SerialException " + e
         return self.rx
     
     ## sends message
     # @param msg serialized object
-    def send(self, msg=''):
+    def send(self):
         """ read serial interface and opens/reconnects if needed """
         try:
+            self.seq = self.count_msg
             self.com.write(self.pack())
-            if(len(msg) > 0):
-                self.com.write(msg)
+            if(len(self.data) > 0):
+                self.com.write(self.data)
+            self.count_msg = self.count_msg + 1
         except serial.SerialTimeoutException as e:
             print "serial.SerialTimeoutException = " + e
         except serial.serialutil.SerialException as e:

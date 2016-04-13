@@ -18,87 +18,84 @@ namespace tuw {
  * @author Markus Bader <markus.bader@tuwien.ac.at>
  **/
 class __attribute__ ( ( packed ) ) ComMessage : public ComHeader {
-	typedef uint16_t Type;
+    static const int MAX_BUFFER_SIZE = 0xFF;
 private:
-    char buffer[0xFF];          /// buffer to receive messages increas if needed
-    static uint16_t count_msg;  /// static variale to increase message count
-	static uint16_t sync_count; /// number of sync attempts 
-	static const uint16_t TYPE_TIME_REQUEST = 10;
-	static const uint16_t TYPE_TIME = 10;
+    char buffer[MAX_BUFFER_SIZE];	/// buffer to receive messages increas if needed
+    static uint16_t count_msg;  	/// static variale to increase message count
+    static uint16_t sync_count; 	/// number of sync attempts
+    int stack_idx;			/// index for message decoding
 public:
-    ComMessage();				/// constructor
+    ComMessage();			/// constructor
     /**
-     * clears the buffer 
+     * clears the buffer
      **/
     void clear();
 
     /**
-     * sends the current object stored in the buffer
-     * @pre set() use the set function to place a object into the buffer
-     * @return number of total send bytes including header
+     * sends the current objects stored in the buffer
+     * @pre push_object() use the set function to place a objects into the buffer
+     * @return number of total transmitted bytes including header
      **/
-    uint16_t send (); 
+    uint16_t send ();
     /**
-     * sends a sync message for time request
-     * @return number of total send bytes including header
+     * places a sync request into the message buffer
+     * @return true on success, false if message buffer was full
      **/
-    uint16_t push_sync_request (); 
+    bool push_sync_request ();
     /**
-     * receives a object with header 
-     * the type varible can be used to identify the object received
-     * @see Header 
-     * @post get() use the get function copy the object out of the buffer
+     * receives a message with header
+     * @post pop_type() to check which objects are in the buffer
      * @return number of total bytes received including header
-     **/         
+     **/
     uint16_t receive();
 
     /**
-     * adds a object to the
-     * @param src source to serialize object into the buffer
+     * places a object  into the message buffer
      * @post send()
-     * @return a reference to the current class
-     **/         
-    template <class T> ComMessage& push ( const T& src ) {
-		Type& type = *((Type*) (buffer + this->size));
-		type = T::TYPE;
-		this->size += sizeof(Type);
-		memcpy(buffer + this->size, (void*) &src, sizeof(T));
-		this->size += sizeof(T);
-		return *this;
+     * @return true on success, false if message buffer was full
+     **/
+    template <class T> bool push_object ( const T& src ) {
+        if ( this->size + sizeof ( Type ) + sizeof ( T ) <= MAX_BUFFER_SIZE ) {
+            Type& type = * ( ( Type* ) ( buffer + this->size ) );
+            type = T::TYPE;
+            this->size += sizeof ( Type );
+            memcpy ( buffer + this->size, ( void* ) &src, sizeof ( T ) );
+            this->size += sizeof ( T );
+            return true;
+        } else {
+            return false;
+        }
     }
+
     /**
-     * get clones the buffer into a object
-     * @param des destination to serialize buffer to
-     * @pre receive()
-     **/        
-    template <class T> uint16_t get ( T& des ) {
-		int idx = this->size - sizeof(T) - sizeof(Type);
-		memcpy((void*) &des, buffer + idx, sizeof(T));
-		return getType();
-    }
+     * tries a sync if needed
+     * blocking
+     **/
+    void try_sync();
+
+    /**
+     * return the next object type
+     * @post receive()
+     * @return true on success, false if message holds no more objects
+     **/
+    bool pop_type ( Type &type );
     
     /**
-     * tries a sync if needed
-     **/     
-    void try_sync();
-    /**
-     * tries a sync if needed
-     **/     
-    uint16_t getType(){
-		return *((Type*) buffer[this->size-sizeof(Type)]);
-	}
-    /**
-     * tries a sync if needed
-     **/     
-    template <class T> bool pop ( T& des ) {
-		if(this->size - sizeof(Type) > sizeof(ComHeader)){
-			this->size -= sizeof(Type);
-			this->size -= sizeof(T);
-			memcpy((void*) &des, buffer + this->size, sizeof(T));
-		}
-		return des;
+     * return the next object
+     * @post pop_type()
+     * @return true on success, false if message holds no more objects
+     **/
+    template <class T> bool pop_object ( T& des ) {
+        if ( stack_idx + sizeof ( T ) <= this->size ) {
+            memcpy ( ( void* ) &des, buffer + stack_idx, sizeof ( T ) );
+            stack_idx += sizeof ( T );
+            return true;
+        } else {
+            stack_idx += sizeof ( T );
+            return false;
+        }
     }
-	
+
 };
 };
 #endif

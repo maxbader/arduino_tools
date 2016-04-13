@@ -10,7 +10,7 @@ class Pose:
     
     ## unique type id to identify received objects
     TYPE = 100
-    struct = struct.Struct("fff")
+    struct = struct.Struct("=fff")
     
     
     ## constructor
@@ -39,7 +39,7 @@ class Text:
     
     ## unique type id to identify received objects
     TYPE = 200
-    struct = struct.Struct("32s")
+    struct = struct.Struct("=32s")
     
     
     ## constructor

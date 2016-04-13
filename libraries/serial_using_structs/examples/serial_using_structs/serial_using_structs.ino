@@ -7,6 +7,7 @@
  */
  
 #include <com_message.h>
+
 struct __attribute__ ( ( packed ) ) Pose {
     float x;
     float y;
@@ -26,36 +27,36 @@ int loop_count;        /// defines which message should be send
 
 void setup() {
     init();
-    Serial.begin ( 115200 );
-    //msg.try_sync();   /// sync time
+    Serial.begin ( 115200 );			/// init serial
+    msg.try_sync();   				    /// blocks until a sync message arrives
     delay ( 1000 );
     pose.x = 140, pose.y = 10., pose.theta = 0.2;
-    sprintf(text.c,"Hello World!");
+    sprintf ( text.c,"Hello World!" );
     loop_count = 0;
 }
 
 void loop() {
-    delay ( 1000 );              
-    pose.x += 1.;               /// we are increasing the x for debugging reasons
-    msg.update_time(millis());  /// update time stamp
-    msg.clear();
-    //msg.push(pose);
-    //msg.push(text);
-    msg.push_sync_request();
-    //if(loop_count % 2 == 0) msg.push(pose);       /// sends pose message
-    //if(loop_count % 2 == 1) msg.push(text);       /// sends pose message
-    msg.send();
-    /*
-    if(msg.receive()) {         /// check for messages
-      switch(msg.type){         /// check message type
-        case tuw::ComHeader::TYPE_TIME: /// case time sync message
-          tuw::Time::setClock(msg.stamp, millis()); /// set clock 
-          break;
-        case Pose::TYPE:        /// case pose type
-          msg.get(pose);        /// update pose    
-          break;
-      }
+    delay ( 1000 );
+    pose.x += 1.;               		/// we are increasing the x for debugging reasons
+    msg.clear();				        /// removes all objects in message
+    msg.update_time ( millis() ); 		/// update time stamp
+    msg.push_object ( pose );			/// pushes a object into the message
+    msg.push_object ( text );			/// pushes a object into the message
+    msg.send();					        /// sends the message
+
+    if ( msg.receive() ) {      		/// check for messages
+        tuw::ComHeader::Type type;
+        while (  msg.pop_type(type) ) {	/// check for objects and there type
+            switch ( type ) {
+            case Pose::TYPE:        		/// case pose type
+                msg.pop_object ( pose );    	/// update pose
+                break;
+            case tuw::ComHeader::TYPE_SYNC: 	/// case time sync message
+                tuw::Time::setClock ( msg.stamp, millis() ); /// set clock
+                break;
+            }
+        }
     }
-    */
+
     loop_count++;
 }

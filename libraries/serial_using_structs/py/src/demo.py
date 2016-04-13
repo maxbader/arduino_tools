@@ -21,39 +21,47 @@ print 'port: {:s}, baudrate {:d}, timeout {:f} '.format(args.port, args.baudrate
 if __name__ == '__main__':
     com = ComMessage(args.port, args.baudrate, args.timeout)
     loop = True    
-    sync_request = False;
+    pose = Pose()
     while loop:
+        send_sync = False;
+        send_pose = False;
         com.receive()
         if( com.rx ) :
             print "rx " + str(com)
-            while (len(com.data) > 0):
-                type_msg = com.pop_type()
-                
+            while (com.rx and (len(com.data) > 0)):
+                type_msg = com.pop_type()                
                 if(type_msg == Pose.TYPE) :
-                    pose = Pose()
-                    msg = com.pop_msg(Pose.struct.size)
-                    pose.unpack(msg)
+                    pose = com.pop_object(pose)
                     print " " + str(pose)
-                    #pose.y = pose.y + 1
-                    #com.send(pose.pack())  
+                    send_pose = True
                 elif(type_msg == Text.TYPE) :  
-                    text = Text()
-                    msg = com.pop_msg(text.struct.size)
-                    text.unpack(msg)
+                    text = com.pop_object(Text())
                     print " " + str(text)
-                elif(type_msg == ComMessage.TYPE_TIME_REQUEST) :  
+                elif(type_msg == ComMessage.TYPE_SYNC_REQUEST) :  
                     print ' sync request' 
-                    sync_request = True
-                elif(type_msg == TYPE_NA) :  
+                    send_sync = True
+                elif(type_msg == ComMessage.TYPE_NA) :  
                     print ' problem in message'
-                elif(type_msg == TYPE_EMPTY) :  
+                    com.rx = False
+                elif(type_msg == ComMessage.TYPE_EMPTY) :  
                     print ' empty'
+                    com.rx = False
                 else :  
-                    print ' unkown type: {:d} ',format(type)
-        if (sync_request):
+                    print ' unkown type: {:d} '.format(type_msg)
+        com.clear()
+        if (send_sync):
             com.push_sync()
+        if (send_pose):
+            pose.y = pose.y + 10
+            #buffer = com.pack_type(pose.TYPE) + pose.pack()
+            com.push_object(pose)
+        if (send_pose or send_sync):
             com.send()
             print "tx " + str(com)
+            if(send_sync): 
+                print " sync"
+            if(send_pose): 
+                print " " + str(pose)
         
-        time.sleep(0.001)           
+        time.sleep(0.01)           
     print "exit"
