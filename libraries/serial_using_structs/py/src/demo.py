@@ -7,7 +7,7 @@ import argparse
 import struct
 import numpy as np
 from tuw.Arduino import ComMessage
-from tuw.Arduino import Pose
+from tuw.ArduinoMessages import Pose
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', dest="port", type=str, default="/dev/ttyACM0", help="port such as /dev/ttyACM0")

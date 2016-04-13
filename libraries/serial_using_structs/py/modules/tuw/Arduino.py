@@ -31,29 +31,6 @@ class Time:
         return t
         
 
-## class to receive and send via serial link
-class Pose:
-    
-    ## unique type id to identify received objects
-    TYPE = 100
-    
-    
-    ## constructor
-    def __init__(self, x = 0., y = 0., theta = 0.):
-        self.x = x
-        self.y = y
-        self.theta = theta
-        self.struct = struct.Struct("fff")
-
-    ## de-serialized a received string into the class variables
-    def unpack(self, msg):
-        self.x, self.y, self.z = self.struct.unpack(msg)
-        
-    ## serializes the class variables into a buffer 
-    # @return serialized buffer
-    def pack(self):
-        msg = self.struct.pack(self.x, self.y, self.theta)
-        return msg
     
 ## header class to handle message for serial communication
 class ComHeader:
@@ -62,6 +39,8 @@ class ComHeader:
     TYPE_NA   = 0
     TYPE_SYNC = 10
     TYPE_TIME = 11
+    struct = struct.Struct("HHIii")
+    
     ## constructor
     def __init__(self, size = 0, type = 0, seq = 0, sec = 0, nsec = 0):
         ## set on true on successful received messages
@@ -78,7 +57,6 @@ class ComHeader:
         self.stamp = Time(sec, nsec)
         ## serialized data
         self.data = []
-        self.struct = struct.Struct("HHIii")
 
     ## de-serialized a received string into the class variables
     def unpack(self, msg):
