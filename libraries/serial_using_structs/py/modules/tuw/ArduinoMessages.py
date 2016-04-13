@@ -54,4 +54,6 @@ class Text:
     # @return serialized buffer
     def pack(self):
         return copy.copy(self.text) 
+    def __str__(self):
+        return self.text[0: self.text.find('\0')]
         

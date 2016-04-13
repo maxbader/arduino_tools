@@ -8,6 +8,7 @@ import struct
 import numpy as np
 from tuw.Arduino import ComMessage
 from tuw.ArduinoMessages import Pose
+from tuw.ArduinoMessages import Text
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', dest="port", type=str, default="/dev/ttyACM0", help="port such as /dev/ttyACM0")
@@ -23,19 +24,25 @@ if __name__ == '__main__':
     while loop:
         com.receive()
         if( com.rx ) :
+            time_rx = com.stamp.time().strftime('%Y-%m-%d %H:%M:%S.%f')
             if(com.type == Pose.TYPE) :
-                p = Pose()
-                p.unpack(com.data)
-                t = com.stamp.time().strftime('%Y-%m-%d %H:%M:%S.%f')
-                print 'rx {:d} {:s}: {:s}'.format(com.seq, str(t), str(p) )
-                p.y = p.y + 1
-                com.send(p.pack())  
-            if(com.type == ComMessage.TYPE_SYNC) :  
+                pose = Pose()
+                pose.unpack(com.data)
+                print 'rx {:04d} {:s}: {:s}'.format(com.seq, time_rx, str(pose) )
+                pose.y = pose.y + 1
+                com.send(pose.pack())  
+            elif(com.type == ComMessage.TYPE_SYNC) :  
                 print 'rx sync request {:d}'.format(com.seq) 
                 com.set_sync()
                 com.send()
-                t = com.stamp.time().strftime('%Y-%m-%d %H:%M:%S.%f')
-                print 'tx {:s} = sec {:d}, nsec {:d}'.format(str(t), com.stamp.sec, com.stamp.nsec) 
+                time_tx = com.stamp.time().strftime('%Y-%m-%d %H:%M:%S.%f')
+                print 'tx {:s} = sec {:d}, nsec {:d}'.format(time_tx, com.stamp.sec, com.stamp.nsec) 
+            elif(com.type == Text.TYPE) :  
+                text = Text()
+                text.unpack(com.data)
+                print 'rx {:04d} {:s}: {:s}'.format(com.seq, time_rx, str(text))
+            else :  
+                print 'rx {:04d} {:s}: unkown type {:d}'.format(com.seq, str(time_rx),  com.type)
                  
         time.sleep(0.001)           
     print "exit"
