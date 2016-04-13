@@ -29,27 +29,24 @@ class Time:
         t = t + dt.timedelta( microseconds = self.nsec/1000)
         return t
         
+    def __str__(self):
+        return self.time().strftime('%Y-%m-%d %H:%M:%S.%f')
 
     
 ## header class to handle message for serial communication
 class ComHeader:
     
     ## unique type id to identify received objects
-    TYPE_NA   = 0
-    TYPE_SYNC = 10
-    TYPE_TIME = 11
-    struct = struct.Struct("HHIii")
+    struct_header = struct.Struct("=HIii")
     
     ## constructor
-    def __init__(self, size = 0, type = 0, seq = 0, sec = 0, nsec = 0):
+    def __init__(self, size = 0, seq = 0, sec = 0, nsec = 0):
         ## set on true on successful received messages
         self.rx = False
         ## maximum object size to receive
         self.max_data_size = 0xFF
-        ## size of object to receive without header
+        ## total size of message
         self.size = np.uint16(size)
-        ## type of object to receive
-        self.type = np.uint16(type)
         ## unique message id
         self.seq = np.uint32(seq)
         ## timestamp 
@@ -59,24 +56,30 @@ class ComHeader:
 
     ## de-serialized a received string into the class variables
     def unpack(self, msg):
-        self.size, self.type, self.seq, self.stamp.sec, self.stamp.nsec, = self.struct.unpack(msg)
+        self.size, self.seq, self.stamp.sec, self.stamp.nsec, = self.struct_header.unpack(msg)
         
     ## serializes the class variables into a buffer 
     # @return serialized buffer
     def pack(self):
-        msg = self.struct.pack(len(self.data), self.type, self.seq, self.stamp.sec, self.stamp.nsec)
+        msg = self.struct_header.pack(len(self.data), self.seq, self.stamp.sec, self.stamp.nsec)
         return msg
         
-    def size_header(self):
-        return self.struct.size
-    
     def set_sync(self):
         self.size = 0
-        self.type = self.TYPE_TIME
         self.stamp.set_to_now();
       
+    def __str__(self):
+        return 'seq={:04d}, size={:d}:, stamp={:s}'.format(self.seq, self.size, str(self.stamp) )
+     
 ## header class send messages via serial link
 class ComMessage(ComHeader):
+    
+    ## unique type id to identify received objects
+    TYPE_EMPTY   = 0
+    TYPE_NA      = -1
+    TYPE_TIME_REQUEST = 10
+    TYPE_TIME = 11
+    struct_type = struct.Struct("=H")
     
     ## constructor
     def __init__(self, port , baudrate = 115200, timeout = 1.0, xonxoff = False):
@@ -106,6 +109,30 @@ class ComMessage(ComHeader):
             self.close()
             return False
         
+    ## opens serial link
+    def pop_type(self):
+        type = -1
+        if  (len(self.data) >= self.struct_type.size):
+            type, = self.struct_type.unpack(self.data[0:self.struct_type.size] )
+            self.data = self.data[self.struct_type.size:]
+        elif (len(self.data) == 0):
+            type = 0
+        return type
+    
+    def pop_msg(self, size_msg):
+        msg = []
+        if  (len(self.data) >= size_msg):
+            msg = self.data[0:size_msg]
+            self.data = self.data[size_msg:]
+        return msg
+        
+    def push_sync(self):
+        self.set_sync()
+    
+    def clear(self):
+        self.size = 0
+        self.data = [self.data, TYPE_TIME]
+        
     ## receives message
     # @see check the rx variable to see if the receiving was successful 
     def receive(self):            
@@ -114,8 +141,8 @@ class ComMessage(ComHeader):
             self.rx = False
             if(self.com.isOpen() == False):
                 self.open()
-            msg = self.com.read(self.size_header())
-            if(len(msg) != self.size_header()) :
+            msg = self.com.read(self.struct_header.size)
+            if(len(msg) != self.struct_header.size) :
                 print "incorrect header received"
                 self.com.flushInput()
                 return self.rx

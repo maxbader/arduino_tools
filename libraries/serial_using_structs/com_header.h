@@ -30,17 +30,10 @@ private:
  **/
 class __attribute__ ( ( packed ) ) ComHeader {
 public:
-    uint16_t size;    /// size of following message
-    uint16_t type;    /// message type
-					  /// type = 0 means empty
-					  /// type = 10 means sync request
-					  /// type = 11 means time syncronization
+    uint16_t size;    /// total message size if size 
     uint32_t seq;     /// consecutively increasing ID 
     Time stamp;       /// time since epoch
     void update_time(unsigned long millisecond); /// update time stamp
-    static const uint16_t TYPE_NA   = 0;
-    static const uint16_t TYPE_SYNC = 10;
-    static const uint16_t TYPE_TIME = 11;
 };
 };
 

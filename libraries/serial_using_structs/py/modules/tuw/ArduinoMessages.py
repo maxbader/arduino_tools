@@ -21,7 +21,7 @@ class Pose:
 
     ## de-serialized a received string into the class variables
     def unpack(self, msg):
-        self.x, self.y, self.z = self.struct.unpack(msg)
+        self.x, self.y, self.theta,  = self.struct.unpack(msg)
         
     ## serializes the class variables into a buffer 
     # @return serialized buffer
@@ -39,7 +39,7 @@ class Text:
     
     ## unique type id to identify received objects
     TYPE = 200
-    struct = struct.Struct("64s")
+    struct = struct.Struct("32s")
     
     
     ## constructor
