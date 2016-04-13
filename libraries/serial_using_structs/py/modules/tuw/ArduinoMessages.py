@@ -28,6 +28,11 @@ class Pose:
     def pack(self):
         msg = self.struct.pack(self.x, self.y, self.theta)
         return msg
+    
+    def __str__(self):
+        return '{:f}, {:f}, {:f}'.format(self.x, self.y, self.theta)
+        
+        
            
 ## class to receive and send via serial link
 class Text:

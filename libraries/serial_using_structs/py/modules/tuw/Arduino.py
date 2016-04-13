@@ -3,7 +3,6 @@
 
 
 import serial
-import sys
 import time
 import struct
 import numpy as np

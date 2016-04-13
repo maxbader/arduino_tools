@@ -27,7 +27,7 @@ if __name__ == '__main__':
                 p = Pose()
                 p.unpack(com.data)
                 t = com.stamp.time().strftime('%Y-%m-%d %H:%M:%S.%f')
-                print 'rx {:d} {:s}: {:f}, {:f}, {:f}'.format(com.seq, str(t), p.x,p.y,p.theta)
+                print 'rx {:d} {:s}: {:s}'.format(com.seq, str(t), str(p) )
                 p.y = p.y + 1
                 com.send(p.pack())  
             if(com.type == ComMessage.TYPE_SYNC) :  
