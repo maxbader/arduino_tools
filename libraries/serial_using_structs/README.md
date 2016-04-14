@@ -1,12 +1,9 @@
 # Serial Using Structs
 This library contains a demo with a python program for your PC to show a time sync and message exchange with an arduino.
 There are to operation modes
-- simple_messages
-- packed_messages
-
-A simple_message has one header, a object type id and the object encoded
+- simple_messages: A simple_message has one header, a object type id and the object encoded
 ```header, id, obj```
-A packed_message has one header, and multiple packed object type id and the objects encoded
+- packed_messages: A packed_message has one header, and multiple packed object type id and the objects encoded
 ```header, id0, obj0, id0, obj0, id0, obj0, ...```
 ## Hardware
 it should work on all Arduinos
