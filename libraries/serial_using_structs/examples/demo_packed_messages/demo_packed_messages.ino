@@ -16,8 +16,22 @@ struct __attribute__ ( ( packed ) ) Pose {
 };
 
 struct __attribute__ ( ( packed ) ) Text {
-    char c[32];
+    static const int MAX_BUFFER_SIZE = 32;
+    char txt[MAX_BUFFER_SIZE];
     static const uint16_t TYPE = 200;
+    void clear(){
+      memset ( txt, '\0', MAX_BUFFER_SIZE );
+    }
+    int write(const char *msg) {
+       int bytes_remaining = MAX_BUFFER_SIZE - strlen(msg);
+       if(bytes_remaining > 0){
+         strcpy( txt, msg);
+       }
+       return bytes_remaining;
+    }
+    int size(){
+      return strlen(txt);
+    }
 };
 
 Pose pose;             /// object to send
@@ -28,10 +42,10 @@ int loop_count;        /// defines which message should be send
 void setup() {
     init();
     Serial.begin ( 115200 );			/// init serial
-    msg.try_sync();   				    /// blocks until a sync message arrives
+    msg.try_sync();   			        /// blocks until a sync message arrives
     delay ( 1000 );
     pose.x = 140, pose.y = 10., pose.theta = 0.2;
-    sprintf ( text.c,"Hello World!" );
+    text.write("Hello World!" );
     loop_count = 0;
 }
 
@@ -40,20 +54,28 @@ void loop() {
     pose.x += 1.;               		/// we are increasing the x for debugging reasons
     msg.clear();				        /// removes all objects in message
     msg.update_time ( millis() ); 		/// update time stamp
-    msg.push_object ( pose );			/// pushes a object into the message
-    msg.push_object ( text );			/// pushes a object into the message
-    msg.send();					        /// sends the message
+    if(msg.push_object ( pose ) < 0) {          /// pushes a object into the message
+      // ... no space for object in message
+    }			                        
+    if(msg.push_object ( text ) < 0) {		/// pushes a object into the message
+      // ... no space for object in message
+    }			         
+    msg.send();				        /// sends the message
 
     if ( msg.receive() ) {      		/// check for messages
         tuw::ComHeader::Type type;
-        while (  msg.pop_type(type) ) {	/// check for objects and there type
+        while (  msg.pop_type(type) >= 0) {	/// check for objects and there type
             switch ( type ) {
             case Pose::TYPE:        		/// case pose type
                 msg.pop_object ( pose );    	/// update pose
                 break;
-            case tuw::ComHeader::TYPE_SYNC: 	/// case time sync message
+            case tuw::ComHeader::TYPE_SYNC: 	/// case sync object
                 tuw::Time::setClock ( msg.stamp, millis() ); /// set clock
                 break;
+            case tuw::ComHeader::TYPE_EMPTY: 	/// case empty object
+            default:/// case unkown type
+                text.write("Unknown type received");
+                continue;   
             }
         }
     }

@@ -40,7 +40,8 @@ class ComHeader:
     struct_header = struct.Struct("=HIii")
     
     ## unique type id to identify received objects
-    TYPE_EMPTY   = 0
+    TYPE_ERROR   = 0
+    TYPE_EMPTY   = 1
     TYPE_SYNC_REQUEST = 10
     TYPE_SYNC = 11
     
@@ -109,7 +110,39 @@ class ComMessage(ComHeader):
             self.close()
             return False
     
-    ## opens serial link
+    ## deserialize allways the frist object type after the header
+    ## @remark for simple messages with one object
+    ## @pre receive()
+    ## @return the object type 
+    def get_type(self):
+        if  (len(self.data) >= self.struct_type.size):
+            msg = self.data[0 : self.struct_type.size]
+            type, = self.struct_type.unpack(msg )
+            return type
+        else :
+            return ComHeader.TYPE_ERROR
+        
+    ## deserialize allways the frist object after the header and object type
+    ## @remark for simple messages with one object
+    ## @pre get_type()
+    ## @return object
+    def get_object(self, object):
+        object_size = object.struct.size + self.struct_type.size
+        if  (len(self.data) >= object_size):
+            msg = self.data[self.struct_type.size : ]
+            object.unpack(msg)
+        return object
+    
+    ## pushes an object for sending into the message buffer as first object
+    ## @remark for simple messages with one object
+    ## @post send()
+    def set_object(self, object):
+        self.data = self.struct_type.pack(object.TYPE) + object.pack()
+        self.size = len(self.data)
+        return self
+        
+    ## deserialize and pop's the object type from the buffer
+    ## @return object type
     def pop_type(self):
         if  (len(self.data) >= self.struct_type.size):
             type, = self.struct_type.unpack(self.data[0:self.struct_type.size] )
@@ -118,14 +151,16 @@ class ComMessage(ComHeader):
         elif (len(self.data) == 0):
             return ComHeader.TYPE_EMPTY
         else :
-            return ComHeader.TYPE_NA
+            return ComHeader.TYPE_ERROR
     
-    ## pushes an object for sending into the message buffer
+    ## serializes a object into the message buffer
+    ## @post send()
     def push_object(self, object):
         self.data = self.data + self.struct_type.pack(object.TYPE) + object.pack()
         self.size = len(self.data)
         
-    ## pop the first object from a received message
+    ## deserialize and pop's a object from the buffer
+    ## @return the object
     def pop_object(self, object):
         if  (len(self.data) >= object.struct.size):
             msg = self.data[0:object.struct.size]
@@ -133,7 +168,8 @@ class ComMessage(ComHeader):
             object.unpack(msg)
         return object
         
-    ## pushes an sync object for sending into the message buffer
+    ## places a sync request into the message buffer
+    ## @post send()
     def push_sync(self):
         self.stamp.set_to_now()
         self.data = self.data + self.struct_type.pack(self.TYPE_SYNC)

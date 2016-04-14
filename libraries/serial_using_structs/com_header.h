@@ -31,12 +31,13 @@ private:
 class __attribute__ ( ( packed ) ) ComHeader {
 public:
     typedef uint16_t Type;
-    static const Type TYPE_EMPTY = 0;
-    static const Type TYPE_SYNC_REQUEST = 10;
-    static const Type TYPE_SYNC = 11;
-    uint16_t size;    /// total message size if size
-    uint32_t seq;     /// consecutively increasing ID
-    Time stamp;       /// time since epoch
+    static const Type TYPE_ERROR = 0;    /// error on decodeding     
+    static const Type TYPE_EMPTY = 1;    /// no type encoded
+    static const Type TYPE_SYNC_REQUEST = 10; /// sync request type
+    static const Type TYPE_SYNC = 11;    /// sync type
+    uint16_t size;                       /// total message size if size
+    uint32_t seq;                        /// consecutively increasing ID
+    Time stamp;                          /// time since epoch
     void update_time ( unsigned long millisecond ); /// update time stamp
 };
 };

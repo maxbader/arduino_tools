@@ -53,7 +53,6 @@ if __name__ == '__main__':
             com.push_sync()
         if (send_pose):
             pose.y = pose.y + 10
-            #buffer = com.pack_type(pose.TYPE) + pose.pack()
             com.push_object(pose)
         if (send_pose or send_sync):
             com.send()

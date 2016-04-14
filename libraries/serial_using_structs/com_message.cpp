@@ -20,8 +20,8 @@ void ComMessage::clear() {
     memset ( buffer, '\0', MAX_BUFFER_SIZE );
 }
 
-uint16_t ComMessage::receive() {
-    uint16_t rx_count = 0;
+int ComMessage::receive() {
+    int rx_count = 0;
     if ( Serial.available() ) {
         uint16_t rx_expected = 0;
         char *c = ( char* ) this;
@@ -47,8 +47,8 @@ uint16_t ComMessage::receive() {
 }
 
 
-uint16_t ComMessage::send () {
-    uint16_t total = 0;
+int ComMessage::send () {
+    int total = 0;
     if ( Serial ) {
         char *c = ( char * ) this;
         uint16_t total = sizeof ( ComHeader ) + this->size;
@@ -81,7 +81,7 @@ void ComMessage::try_sync() {
         };
         if ( receive() ) {      /// check for messages
             tuw::ComHeader::Type type;
-            while ( pop_type ( type ) ) {
+            while ( pop_type ( type ) >= 0 ) {
                 if ( type == tuw::ComHeader::TYPE_SYNC ) { /// case time sync message
                     tuw::Time::setClock ( stamp, millis() ); /// set clock
                     break;
@@ -92,14 +92,22 @@ void ComMessage::try_sync() {
     }
 }
 
-bool ComMessage::pop_type ( Type &type ) {
-    if ( stack_idx + sizeof ( Type ) <= this->size ) {
+ComHeader::Type ComMessage::get_type ( Type &type ){
+    if ( this->size >= sizeof ( Type ) ) {
+        type = * ( ( Type* ) ( buffer) );
+    } else {
+        type = TYPE_ERROR;
+    }
+    return type;
+}
+
+int ComMessage::pop_type ( Type &type ) {
+	int bytes_remaining = this->size - (stack_idx + sizeof ( Type ));
+    if ( bytes_remaining >= 0 ) {
         type = * ( ( Type* ) ( buffer + stack_idx ) );
-        stack_idx += sizeof ( Type );
-        return true;
     } else {
         type = TYPE_EMPTY;
-        stack_idx += sizeof ( Type );
-        return false;
     }
+    stack_idx += sizeof ( Type );
+    return bytes_remaining;
 }
