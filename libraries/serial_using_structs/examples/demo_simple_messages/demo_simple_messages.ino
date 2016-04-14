@@ -53,8 +53,8 @@ void loop() {
     delay ( 1000 );
     pose.x += 1.;               		/// we are increasing the x for debugging reasons
     msg.update_time ( millis() ); 		/// update time stamp
-    msg.set_object ( text ).send;       /// send a object
-    msg.set_object ( pose ).send;       /// send a object
+    msg.set_object ( text ).send();       /// send a object
+    msg.set_object ( pose ).send();       /// send a object
     
     if ( msg.receive() ) {      		     /// check for messages
         tuw::ComHeader::Type type;
