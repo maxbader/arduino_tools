@@ -4,12 +4,12 @@ This repository contains some arduino examples and libraries
 ##Libraries
 You can checkout a single folder/library with svn to your local sketchbook folder
 ```
-svn checkout https://github.com/maxbader/arduino_tools/trunk/libraries/Servos_zero
+svn checkout https://github.com/maxbader/arduino_tools/trunk/libraries/Servos_m0
 ```
 
 
 ##Examples
-- serial_using_structs: Arduino serial communication using structs with a python demo
+- serial_using_structs: Arduino serial communication using structures with a python demo
 - timer_zero_tc_interrupt: TC Timer with interrupt handler on capture and ovf
 - timer_m0_tc_interrupt: TC Timer with interrupt handler on capture and ovf
 - timer_zero_tc_counter:   TC Timer reading counter value
